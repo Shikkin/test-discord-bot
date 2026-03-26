@@ -3,6 +3,7 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -14,11 +15,13 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+processed_messages = set()
+
 secret_role = "gamer"
 
 @bot.event
 async def on_ready():
-    print(f"we are ready to go in, {bot.user.name}")
+    print(f"Bot ready: {bot.user} | Instance: {os.getenv('RENDER_INSTANCE_ID')}")
 
 
 @bot.event
@@ -29,6 +32,12 @@ async def on_member_join(member):
 async def on_message(message):
     if message.author == bot.user:
         return
+
+    if message.id in processed_messages:
+        return
+    processed_messages.add(message.id)
+    if len(processed_messages) > 200:
+        processed_messages.clear()
 
     if "shit" in message.content.lower():
         print("word detected")
@@ -97,4 +106,6 @@ async def secret_error(ctx, error):
         await ctx.send("You do not have permission to do that!")
 
 
+print("Starting bot instance:", os.getenv("RENDER_INSTANCE_ID"))
+time.sleep(15)
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
